@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alex Rivera — Designer &amp; Desenvolvedor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #231019;
+    --ink-soft: #2e1622;
+    --bone: #F6EDE4;
+    --bone-dim: #cfc0b3;
+    --gold: #C98A2C;
+    --gold-soft: #e3b46a;
+    --line: rgba(246,237,228,0.14);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--bone);
+    font-family:'Inter', sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{ background:var(--gold); color:var(--ink); }
+
+  a{ color:inherit; text-decoration:none; }
+
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    font-size:0.72rem;
+    color:var(--gold-soft);
+  }
+
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+
+  /* ---------- THREAD (signature element) ---------- */
+  .thread{
+    position:absolute;
+    left:32px;
+    top:0;
+    bottom:0;
+    width:1px;
+    background:var(--line);
+    z-index:0;
+  }
+  .thread-node{
+    position:absolute;
+    left:32px;
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--ink);
+    border:1px solid var(--gold);
+    transform:translate(-50%,-50%);
+    z-index:1;
+  }
+  .thread-node.filled{ background:var(--gold); }
+
+  @media (max-width: 760px){
+    .thread, .thread-node{ display:none; }
+  }
+
+  /* ---------- LAYOUT ---------- */
+  .wrap{
+    max-width:880px;
+    margin:0 auto;
+    padding:0 28px 0 84px;
+    position:relative;
+  }
+  @media (max-width: 760px){
+    .wrap{ padding:0 24px; }
+  }
+
+  nav{
+    position:sticky; top:0;
+    z-index:10;
+    background:rgba(35,16,25,0.86);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{
+    padding-left:84px;
+    display:flex; justify-content:space-between; align-items:center;
+    height:62px;
+  }
+  @media (max-width: 760px){ nav .wrap{ padding-left:24px; } }
+  .nav-name{ font-family:'Fraunces', serif; font-weight:600; font-size:1.02rem; }
+  .nav-links{ display:flex; gap:28px; }
+  .nav-links a{ font-family:'IBM Plex Mono', monospace; font-size:0.78rem; color:var(--bone-dim); transition:color .2s; }
+  .nav-links a:hover{ color:var(--gold-soft); }
+  @media (max-width:600px){ .nav-links{ display:none; } }
+
+  section{ position:relative; padding:108px 0 0 0; }
+  section:first-of-type{ padding-top:140px; }
+
+  /* ---------- HERO ---------- */
+  .hero .mono{ display:block; margin-bottom:22px; }
+  .hero h1{
+    font-size:clamp(2.6rem, 6vw, 4.4rem);
+    line-height:1.04;
+    max-width:11ch;
+  }
+  .hero .role{
+    margin-top:22px;
+    font-size:1.15rem;
+    color:var(--bone-dim);
+    max-width:42ch;
+  }
+  .hero .role em{
+    font-style:normal;
+    color:var(--gold-soft);
+    border-bottom:1px solid var(--gold);
+  }
+  .hero-cta{
+    margin-top:40px;
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    padding:13px 22px;
+    border:1px solid var(--gold);
+    border-radius:2px;
+    transition: background .2s, color .2s;
+  }
+  .btn.solid{ background:var(--gold); color:var(--ink); }
+  .btn.solid:hover{ background:var(--gold-soft); }
+  .btn.outline:hover{ background:rgba(201,138,44,0.12); }
+
+  /* ---------- SECTION HEADERS ---------- */
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:46px;
+  }
+  .sec-head .num{ font-family:'IBM Plex Mono', monospace; color:var(--gold); font-size:0.85rem; }
+  .sec-head h2{ font-size:1.7rem; }
+  .sec-head .rule{ flex:1; height:1px; background:var(--line); }
+
+  /* ---------- ABOUT ---------- */
+  .about-grid{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap:48px;
+  }
+  @media (max-width:700px){ .about-grid{ grid-template-columns:1fr; } }
+  .about-grid p{ color:var(--bone-dim); margin-bottom:16px; max-width:54ch; }
+  .stat-list{ display:flex; flex-direction:column; gap:18px; }
+  .stat{ border-top:1px solid var(--line); padding-top:10px; }
+  .stat .n{ font-family:'Fraunces', serif; font-size:1.7rem; color:var(--gold-soft); }
+  .stat .l{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--bone-dim); text-transform:uppercase; letter-spacing:0.04em; }
+
+  /* ---------- WORK ---------- */
+  .project{
+    display:grid;
+    grid-template-columns: 90px 1fr;
+    gap:24px;
+    padding:30px 0;
+    border-top:1px solid var(--line);
+    transition: padding-left .25s ease;
+  }
+  .project:last-child{ border-bottom:1px solid var(--line); }
+  .project:hover{ padding-left:10px; }
+  .project .year{ font-family:'IBM Plex Mono', monospace; color:var(--gold); font-size:0.85rem; }
+  .project h3{ font-size:1.3rem; margin-bottom:8px; }
+  .project p{ color:var(--bone-dim); max-width:56ch; margin-bottom:12px; }
+  .tags{ display:flex; gap:10px; flex-wrap:wrap; }
+  .tags span{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    color:var(--bone-dim);
+    border:1px solid var(--line);
+    padding:4px 9px;
+    border-radius:2px;
+  }
+
+  /* ---------- SKILLS ---------- */
+  .skills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .skills span{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    border:1px solid var(--line);
+    padding:9px 16px;
+    border-radius:2px;
+    color:var(--bone-dim);
+  }
+
+  /* ---------- CONTACT ---------- */
+  .contact h2{ font-size:clamp(2rem, 4.5vw, 3rem); max-width:14ch; margin-bottom:24px; }
+  .contact p{ color:var(--bone-dim); max-width:46ch; margin-bottom:34px; }
+  .contact-links{ display:flex; flex-direction:column; gap:4px; margin-bottom:50px;}
+  .contact-links a{
+    font-family:'Fraunces', serif;
+    font-size:1.3rem;
+    padding:14px 0;
+    border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+    transition: color .2s, padding-left .2s;
+  }
+  .contact-links a:last-child{ border-bottom:1px solid var(--line); }
+  .contact-links a:hover{ color:var(--gold-soft); padding-left:8px; }
+  .contact-links a .mono{ margin:0; }
+
+  footer{
+    padding:40px 0 60px 0;
+    color:var(--bone-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ transition:none !important; }
+  }
+
+  .focus-visible-ring:focus-visible, a:focus-visible, button:focus-visible{
+    outline:2px solid var(--gold-soft);
+    outline-offset:3px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-name">Alex Rivera</div>
+    <div class="nav-links">
+      <a href="#sobre">Sobre</a>
+      <a href="#trabalho">Trabalho</a>
+      <a href="#skills">Skills</a>
+      <a href="#contato">Contato</a>
+    </div>
+  </div>
+</nav>
+
+<div class="thread"></div>
+
+<div class="wrap">
+
+  <section class="hero" id="topo">
+    <div class="thread-node filled" style="top:140px;"></div>
+    <span class="mono">Design &amp; Desenvolvimento — Disponível para projetos</span>
+    <h1>Construo produtos digitais com cuidado nos detalhes.</h1>
+    <p class="role">Sou designer e desenvolvedor front-end, focado em transformar <em>ideias</em> em interfaces rápidas, claras e bonitas de usar.</p>
+    <div class="hero-cta">
+      <a class="btn solid" href="#trabalho">Ver trabalhos</a>
+      <a class="btn outline" href="#contato">Falar comigo</a>
+    </div>
+  </section>
+
+  <section id="sobre">
+    <div class="thread-node" style="top:0;"></div>
+    <div class="sec-head">
+      <span class="num">01</span>
+      <h2>Sobre</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="about-grid">
+      <div>
+        <p>Trabalho na fronteira entre design e código há mais de seis anos, ajudando equipes a transformar protótipos em produtos prontos para produção sem perder a qualidade da ideia original.</p>
+        <p>Acredito em interfaces que respeitam o tempo de quem usa: rápidas para carregar, fáceis de entender e bonitas sem exagero. Cada projeto começa com uma pergunta simples — o que essa pessoa precisa fazer aqui, e como tornar isso óbvio?</p>
+      </div>
+      <div class="stat-list">
+        <div class="stat"><div class="n">40+</div><div class="l">Projetos entregues</div></div>
+        <div class="stat"><div class="n">6</div><div class="l">Anos de experiência</div></div>
+        <div class="stat"><div class="n">12</div><div class="l">Países atendidos</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="trabalho">
+    <div class="thread-node" style="top:0;"></div>
+    <div class="sec-head">
+      <span class="num">02</span>
+      <h2>Trabalhos selecionados</h2>
+      <div class="rule"></div>
+    </div>
+
+    <div class="project">
+      <div class="year">2025</div>
+      <div>
+        <h3>Painel Financeiro Aurora</h3>
+        <p>Redesenho completo de um painel de controle financeiro, reduzindo o tempo médio de tarefa em 38% através de uma hierarquia visual mais clara.</p>
+        <div class="tags"><span>Product Design</span><span>React</span><span>Dados</span></div>
+      </div>
+    </div>
+
+    <div class="project">
+      <div class="year">2024</div>
+      <div>
+        <h3>Loja村 (Mura)</h3>
+        <p>E-commerce headless para uma marca de cerâmica artesanal, com foco em fotografia em alta resolução e checkout em três passos.</p>
+        <div class="tags"><span>E-commerce</span><span>Next.js</span><span>Branding</span></div>
+      </div>
+    </div>
+
+    <div class="project">
+      <div class="year">2023</div>
+      <div>
+        <h3>App de Hábitos Sereno</h3>
+        <p>Aplicativo mobile para construção de hábitos, premiado em design por sua abordagem minimalista de notificações.</p>
+        <div class="tags"><span>Mobile</span><span>UX Research</span><span>Swift</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="thread-node" style="top:0;"></div>
+    <div class="sec-head">
+      <span class="num">03</span>
+      <h2>Ferramentas &amp; skills</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="skills">
+      <span>Figma</span><span>React</span><span>TypeScript</span><span>Next.js</span>
+      <span>CSS / Design Systems</span><span>Node.js</span><span>Framer Motion</span>
+      <span>Pesquisa com usuários</span><span>Acessibilidade (WCAG)</span>
+    </div>
+  </section>
+
+  <section class="contact" id="contato" style="padding-bottom:0;">
+    <div class="thread-node" style="top:0;"></div>
+    <div class="sec-head">
+      <span class="num">04</span>
+      <h2 style="font-size:1.7rem;">Contato</h2>
+      <div class="rule"></div>
+    </div>
+    <h2>Vamos construir algo juntos?</h2>
+    <p>Estou aberto a novos projetos, colaborações e conversas sobre design. Escolha o canal que preferir.</p>
+    <div class="contact-links">
+      <a href="mailto:ola@alexrivera.com">E-mail <span class="mono">ola@alexrivera.com</span></a>
+      <a href="https://linkedin.com" target="_blank" rel="noopener">LinkedIn <span class="mono">↗</span></a>
+      <a href="https://github.com" target="_blank" rel="noopener">GitHub <span class="mono">↗</span></a>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 Alex Rivera</span>
+    <span>Feito com cuidado, linha por linha.</span>
+  </footer>
+
+</div>
+
+</body>
+</html>
