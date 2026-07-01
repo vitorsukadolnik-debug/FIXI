@@ -1,1 +1,648 @@
 
+Index · JS
+import Head from 'next/head';
+import { useEffect, useRef } from 'react';
+ 
+export default function Home() {
+  const containerRef = useRef(null);
+ 
+  useEffect(() => {
+    // Guard against re-running the setup twice (React strict mode in dev)
+    if (containerRef.current && containerRef.current.dataset.initialized === 'true') return;
+    if (containerRef.current) containerRef.current.dataset.initialized = 'true';
+ 
+ 
+  // ---------- DATA ----------
+  const categories = [
+    { id:'eletrica', label:'Elétrica', emoji:'⚡' },
+    { id:'hidraulica', label:'Encanamento', emoji:'🚿' },
+    { id:'pintura', label:'Pintura', emoji:'🎨' },
+    { id:'reparos', label:'Reparos Residenciais', emoji:'🛠️' },
+    { id:'ar', label:'Ar-condicionado', emoji:'❄️' },
+    { id:'mecanica', label:'Mecânica', emoji:'🚗' },
+    { id:'limpeza', label:'Limpeza', emoji:'🧹' },
+    { id:'eletronicos', label:'Eletrônicos', emoji:'📱' },
+  ];
+ 
+  const professionals = [
+    { name:'Ricardo Silva', role:'Eletricista', cat:'eletrica', rating:4.8, count:120, verified:true, price:'R$ 80–150', tags:['Instalação de chuveiro','Troca de tomada'], about:'Profissional com 10 anos de experiência em instalações e reparos elétricos residenciais. Atendimento rápido, limpo e organizado.', area:'São Paulo, SP — Zona Sul (Vila Mariana, Moema, Saúde)' },
+    { name:'Fernanda Costa', role:'Eletricista', cat:'eletrica', rating:4.9, count:87, verified:true, price:'R$ 90–180', tags:['Instalação elétrica','Disjuntores'], about:'Eletricista certificada, especialista em projetos residenciais e comerciais de pequeno porte.', area:'São Paulo, SP — Zona Oeste (Pinheiros, Lapa)' },
+    { name:'João Pereira', role:'Eletricista', cat:'eletrica', rating:4.6, count:54, verified:false, price:'R$ 70–140', tags:['Reparo elétrico','Iluminação'], about:'Atendimento rápido para emergências elétricas, 6 anos de experiência.', area:'São Paulo, SP — Zona Norte' },
+    { name:'Marina Alves', role:'Eletricista', cat:'eletrica', rating:4.7, count:203, verified:true, price:'R$ 100–200', tags:['Instalação de ventilador','Chuveiro'], about:'Referência em instalações elétricas residenciais na região, com atendimento pontual e detalhista.', area:'São Paulo, SP — Centro' },
+    { name:'Carlos Mendes', role:'Encanador', cat:'hidraulica', rating:4.7, count:96, verified:true, price:'R$ 90–160', tags:['Desentupimento','Troca de torneiras'], about:'Encanador experiente, especializado em reparos de vazamento e desentupimentos com garantia de serviço.', area:'São Paulo, SP — Zona Sul' },
+    { name:'Patrícia Souza', role:'Pintora', cat:'pintura', rating:4.9, count:64, verified:true, price:'R$ 25–45 /m²', tags:['Pintura interna','Textura'], about:'Pintura residencial e comercial com acabamento fino. Orçamento sem compromisso.', area:'São Paulo, SP — Zona Leste' },
+    { name:'Diego Ramos', role:'Técnico de Ar-condicionado', cat:'ar', rating:4.5, count:41, verified:false, price:'R$ 120–220', tags:['Instalação','Manutenção'], about:'Instalação e manutenção preventiva de ar-condicionado split, atendimento residencial e comercial.', area:'São Paulo, SP — Zona Sul' },
+    { name:'Beatriz Lima', role:'Diarista', cat:'limpeza', rating:4.8, count:150, verified:true, price:'R$ 150–250 /diária', tags:['Limpeza residencial','Pós-obra'], about:'Equipe treinada para limpeza pesada e rotineira, com produtos inclusos.', area:'São Paulo, SP — Toda a cidade' },
+  ];
+ 
+  const reviews = [
+    { name:'Estefânia S.', stars:5, text:'Encontrei rápido e o serviço foi excelente. Deixou tudo limpo e organizado.' },
+    { name:'Jamal R.', stars:5, text:'Muito profissional, chegou no horário combinado e resolveu o problema rapidamente.' },
+    { name:'Bruna M.', stars:4, text:'Bom atendimento, preço justo. Recomendo para quem precisa de um serviço confiável.' },
+  ];
+ 
+  // ---------- STATE ----------
+  let currentCategory = 'eletrica';
+  let currentSort = 'rating';
+ 
+  // ---------- RENDER: categories ----------
+  const catGrid = document.getElementById('catGrid');
+  categories.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cat-card';
+    el.innerHTML = `<div class="ic">${c.emoji}</div><span>${c.label}</span>`;
+    el.addEventListener('click', () => openResults(c.id, c.label));
+    catGrid.appendChild(el);
+  });
+ 
+  document.getElementById('startBtn').addEventListener('click', () => openResults('eletrica', 'Elétrica'));
+ 
+  // ---------- RENDER: results ----------
+  function getInitials(name){
+    return name.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+  }
+ 
+  function sortPros(list, sort){
+    const copy = [...list];
+    if(sort === 'rating') copy.sort((a,b) => b.rating - a.rating);
+    if(sort === 'near') copy.sort(() => Math.random() - 0.5);
+    if(sort === 'price-low') copy.sort((a,b) => parseInt(a.price.replace(/\D/g,'')) - parseInt(b.price.replace(/\D/g,'')));
+    if(sort === 'recent') copy.reverse();
+    if(sort === 'verified') copy.sort((a,b) => (b.verified?1:0) - (a.verified?1:0));
+    return copy;
+  }
+ 
+  function openResults(catId, label){
+    currentCategory = catId;
+    document.getElementById('resTitle').textContent = label;
+    renderResults();
+    showScreen('screen-results');
+  }
+ 
+  function renderResults(){
+    const list = sortPros(professionals.filter(p => p.cat === currentCategory), currentSort);
+    document.getElementById('resSub').textContent = `São Paulo, SP · ${list.length} profissionais encontrados`;
+    const container = document.getElementById('proList');
+    container.innerHTML = '';
+    if(list.length === 0){
+      container.innerHTML = `<div style="text-align:center; color:var(--gray); padding:40px 0; font-size:0.88rem;">Nenhum profissional encontrado nesta categoria ainda.</div>`;
+      return;
+    }
+    list.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'pro-card';
+      card.innerHTML = `
+        <div class="pro-top">
+          <div class="avatar">${getInitials(p.name)}</div>
+          <div class="pro-info">
+            <div class="pro-name-row">
+              <span class="pro-name">${p.name}</span>
+              ${p.verified ? '<span class="verified">✔ Verificado</span>' : ''}
+            </div>
+            <div class="rating-row">
+              <span class="stars">★★★★★</span>
+              <span class="rating-num">${p.rating}</span>
+              <span class="rating-count">(${p.count} avaliações)</span>
+            </div>
+          </div>
+        </div>
+        <div class="pro-tags">${p.tags.map(t => `<span>${t}</span>`).join('')}</div>
+        <div class="pro-meta">${p.role} · A partir de ${p.price}</div>
+        <div class="pro-actions">
+          <div class="btn-outline" data-open-profile="${i}">Ver perfil</div>
+          <div class="btn-solid">💬 WhatsApp</div>
+        </div>
+      `;
+      container.appendChild(card);
+      card.querySelector('[data-open-profile]').addEventListener('click', () => openProfile(p));
+    });
+  }
+ 
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentSort = chip.dataset.sort;
+      renderResults();
+    });
+  });
+ 
+  // ---------- RENDER: profile ----------
+  function openProfile(p){
+    document.getElementById('pfAvatar').textContent = getInitials(p.name);
+    document.getElementById('pfName').textContent = p.name;
+    document.getElementById('pfRole').textContent = p.role;
+    document.getElementById('pfRatingNum').textContent = p.rating;
+    document.getElementById('pfRatingCount').textContent = `(${p.count} avaliações)`;
+    document.getElementById('pfAbout').textContent = p.about;
+    document.getElementById('pfArea').textContent = p.area;
+    document.getElementById('pfBigRating').textContent = p.rating;
+ 
+    const reviewList = document.getElementById('reviewList');
+    reviewList.innerHTML = '';
+    reviews.forEach(r => {
+      const el = document.createElement('div');
+      el.className = 'review';
+      el.innerHTML = `
+        <div class="review-head">
+          <div class="review-avatar">${getInitials(r.name)}</div>
+          <span class="review-name">${r.name}</span>
+          <span class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span>
+        </div>
+        <p>${r.text}</p>
+      `;
+      reviewList.appendChild(el);
+    });
+ 
+    showScreen('screen-profile');
+  }
+ 
+  // ---------- NAV ----------
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelector('.app').scrollTop = 0;
+  }
+ 
+  document.querySelectorAll('[data-back]').forEach(btn => {
+    btn.addEventListener('click', () => showScreen(btn.dataset.back));
+  });
+ 
+  }, []);
+ 
+  return (
+    <>
+      <Head>
+        <title>fixi — Encontre profissionais de confiança</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      </Head>
+      <style>{`
+  :root{
+    --blue: #1E4FD6;
+    --blue-dark: #16359E;
+    --blue-pale: #EBF0FE;
+    --orange: #F5942B;
+    --orange-pale: #FFF1DF;
+    --ink: #16192B;
+    --gray: #6B7080;
+    --gray-light: #E7E9F0;
+    --bg: #F7F8FC;
+    --white: #FFFFFF;
+    --green: #22A559;
+    --radius: 14px;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    font-family:'Manrope', sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{ text-decoration:none; color:inherit; }
+  button{ font-family:inherit; cursor:pointer; border:none; }
+  ::selection{ background:var(--orange-pale); }
+ 
+  .app{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--white);
+    position:relative;
+    box-shadow:0 0 60px rgba(22,25,43,0.08);
+    display:flex;
+    flex-direction:column;
+  }
+ 
+  /* ---------- HEADER / LOGO ---------- */
+  .logo{ display:flex; align-items:center; gap:8px; }
+  .logo svg{ width:26px; height:26px; }
+  .logo span{
+    font-weight:800;
+    font-size:1.4rem;
+    color:var(--blue);
+    letter-spacing:-0.02em;
+  }
+  .logo span em{
+    font-style:normal;
+    color:var(--orange);
+  }
+ 
+  /* ---------- TOP BAR (shared) ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px 14px 20px;
+    border-bottom:1px solid var(--gray-light);
+  }
+  .back-btn{
+    width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+    border-radius:10px;
+    color:var(--ink);
+  }
+ 
+  /* ---------- SCREENS ---------- */
+  .screen{ display:none; flex-direction:column; flex:1; }
+  .screen.active{ display:flex; }
+ 
+  /* ===== HOME ===== */
+  #screen-home{ padding-bottom:24px; }
+  .hero{
+    padding:38px 24px 30px 24px;
+    background:linear-gradient(160deg, var(--blue-pale) 0%, var(--white) 65%);
+  }
+  .hero .logo{ margin-bottom:26px; }
+  .hero h1{
+    font-size:1.5rem;
+    font-weight:800;
+    line-height:1.3;
+    max-width:15ch;
+    margin-bottom:8px;
+  }
+  .hero p{ color:var(--gray); font-size:0.92rem; margin-bottom:22px; max-width:34ch; }
+ 
+  .location-field{
+    display:flex; align-items:center; gap:10px;
+    background:var(--white);
+    border:1px solid var(--gray-light);
+    border-radius:12px;
+    padding:13px 14px;
+    margin-bottom:10px;
+    box-shadow:0 2px 10px rgba(22,25,43,0.04);
+  }
+  .location-field svg{ flex-shrink:0; color:var(--blue); }
+  .location-field select{
+    border:none; outline:none; background:none;
+    font-family:inherit; font-size:0.92rem; font-weight:600; color:var(--ink);
+    flex:1;
+    appearance:none;
+  }
+ 
+  .search-field{
+    display:flex; align-items:center; gap:10px;
+    background:var(--white);
+    border:1px solid var(--gray-light);
+    border-radius:12px;
+    padding:13px 14px;
+    box-shadow:0 2px 10px rgba(22,25,43,0.04);
+  }
+  .search-field svg{ color:var(--gray); flex-shrink:0; }
+  .search-field input{
+    border:none; outline:none; width:100%;
+    font-family:inherit; font-size:0.92rem;
+  }
+ 
+  .cat-section{ padding:26px 20px 0 20px; }
+  .cat-section h2{ font-size:1.02rem; font-weight:700; margin-bottom:14px; }
+  .cat-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:12px 10px;
+  }
+  .cat-card{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:var(--bg);
+    border-radius:14px;
+    padding:14px 4px;
+    text-align:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .cat-card:hover{ background:var(--blue-pale); transform:translateY(-2px); }
+  .cat-card .ic{
+    width:40px; height:40px;
+    border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--white);
+  }
+  .cat-card span{ font-size:0.68rem; font-weight:600; color:var(--ink); line-height:1.2; }
+ 
+  .start-btn{
+    margin:28px 20px 0 20px;
+    background:var(--blue);
+    color:var(--white);
+    padding:16px;
+    border-radius:12px;
+    font-weight:700;
+    font-size:0.95rem;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(30,79,214,0.28);
+  }
+  .start-btn:hover{ background:var(--blue-dark); }
+ 
+  /* ===== RESULTS ===== */
+  #screen-results .results-head{
+    padding:16px 20px;
+  }
+  .results-title{ font-size:1.1rem; font-weight:800; margin-bottom:2px; }
+  .results-sub{ font-size:0.82rem; color:var(--gray); }
+ 
+  .filter-row{
+    display:flex; gap:8px;
+    padding:0 20px 14px 20px;
+    overflow-x:auto;
+  }
+  .filter-row::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex-shrink:0;
+    font-size:0.76rem; font-weight:600;
+    padding:9px 14px;
+    border-radius:20px;
+    background:var(--bg);
+    border:1px solid var(--gray-light);
+    color:var(--gray);
+    display:flex; align-items:center; gap:5px;
+    white-space:nowrap;
+  }
+  .chip.active{ background:var(--blue); color:var(--white); border-color:var(--blue); }
+ 
+  .pro-list{ padding:0 20px 20px 20px; display:flex; flex-direction:column; gap:12px; }
+  .pro-card{
+    border:1px solid var(--gray-light);
+    border-radius:14px;
+    padding:14px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .pro-top{ display:flex; gap:12px; }
+  .avatar{
+    width:52px; height:52px;
+    border-radius:12px;
+    background:var(--blue-pale);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; color:var(--blue);
+    font-size:1.05rem;
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  .pro-info{ flex:1; min-width:0; }
+  .pro-name-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .pro-name{ font-weight:700; font-size:0.95rem; }
+  .verified{
+    color:var(--blue); display:flex; align-items:center; gap:3px;
+    font-size:0.68rem; font-weight:600;
+  }
+  .rating-row{ display:flex; align-items:center; gap:5px; margin-top:3px; }
+  .stars{ color:var(--orange); font-size:0.82rem; letter-spacing:-1px; }
+  .rating-num{ font-size:0.82rem; font-weight:700; }
+  .rating-count{ font-size:0.78rem; color:var(--gray); }
+ 
+  .pro-tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .pro-tags span{
+    font-size:0.7rem; font-weight:600;
+    background:var(--bg);
+    color:var(--ink);
+    padding:5px 9px;
+    border-radius:8px;
+  }
+  .pro-meta{ font-size:0.78rem; color:var(--gray); }
+ 
+  .pro-actions{ display:flex; gap:8px; }
+  .btn-outline{
+    flex:1;
+    text-align:center;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--gray-light);
+    font-size:0.8rem; font-weight:700;
+    color:var(--ink);
+  }
+  .btn-solid{
+    flex:1;
+    text-align:center;
+    padding:10px;
+    border-radius:10px;
+    background:var(--green);
+    color:var(--white);
+    font-size:0.8rem; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+ 
+  /* ===== PROFILE ===== */
+  .profile-hero{
+    position:relative;
+    padding:20px 20px 22px 20px;
+    background:linear-gradient(160deg, var(--blue-pale), var(--white));
+  }
+  .profile-top{ display:flex; gap:14px; align-items:flex-start; }
+  .profile-avatar{
+    width:74px; height:74px;
+    border-radius:16px;
+    background:var(--blue);
+    color:var(--white);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:1.5rem;
+    flex-shrink:0;
+  }
+  .profile-name{ font-size:1.15rem; font-weight:800; }
+  .profile-role{ font-size:0.84rem; color:var(--gray); margin-top:2px; }
+  .profile-rating{ display:flex; align-items:center; gap:6px; margin-top:8px; }
+ 
+  .profile-section{ padding:20px; border-top:1px solid var(--gray-light); }
+  .profile-section h3{ font-size:0.92rem; font-weight:800; margin-bottom:10px; }
+  .profile-section p{ font-size:0.86rem; color:var(--gray); line-height:1.6; }
+ 
+  .area-row{ display:flex; align-items:center; gap:8px; font-size:0.86rem; color:var(--ink); }
+  .area-row svg{ color:var(--blue); flex-shrink:0; }
+ 
+  .portfolio-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;
+  }
+  .portfolio-grid div{
+    aspect-ratio:1;
+    border-radius:10px;
+    background:linear-gradient(135deg, var(--blue-pale), var(--orange-pale));
+    display:flex; align-items:center; justify-content:center;
+    color:var(--gray);
+  }
+ 
+  .rating-summary{
+    display:flex; align-items:center; gap:18px;
+    margin-bottom:16px;
+  }
+  .rating-big{ font-size:2.6rem; font-weight:800; color:var(--blue); line-height:1; }
+  .rating-crit{ flex:1; display:flex; flex-direction:column; gap:6px; }
+  .crit-row{ display:flex; align-items:center; gap:8px; font-size:0.74rem; color:var(--gray); }
+  .crit-row .bar{ flex:1; height:5px; background:var(--gray-light); border-radius:3px; overflow:hidden; }
+  .crit-row .bar div{ height:100%; background:var(--orange); }
+  .crit-row .val{ width:26px; text-align:right; font-weight:700; color:var(--ink); }
+ 
+  .review{ padding:14px 0; border-top:1px solid var(--gray-light); }
+  .review:first-child{ border-top:none; padding-top:0; }
+  .review-head{ display:flex; align-items:center; justify-content:between; gap:8px; margin-bottom:6px; }
+  .review-avatar{
+    width:30px; height:30px; border-radius:50%;
+    background:var(--orange-pale); color:var(--orange);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:0.78rem;
+  }
+  .review-name{ font-weight:700; font-size:0.84rem; }
+  .review-stars{ color:var(--orange); font-size:0.76rem; margin-left:auto; }
+  .review p{ font-size:0.84rem; color:var(--gray); line-height:1.5; }
+ 
+  .profile-cta{
+    position:sticky; bottom:0;
+    display:flex; gap:10px;
+    padding:14px 20px;
+    background:var(--white);
+    border-top:1px solid var(--gray-light);
+  }
+  .profile-cta .btn-solid, .profile-cta .btn-outline{ padding:14px; font-size:0.85rem; }
+ 
+  .note-banner{
+    margin:16px 20px 0 20px;
+    background:var(--orange-pale);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:0.74rem;
+    color:#8A5A17;
+    display:flex; gap:8px;
+  }
+`}</style>
+      <div ref={containerRef} dangerouslySetInnerHTML={{ __html: `<div class="app">
+ 
+  <!-- ============ SCREEN: HOME ============ -->
+  <div class="screen active" id="screen-home">
+    <div class="hero">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12L12 4l9 8" stroke="#1E4FD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 11v8a1 1 0 001 1h4v-5h2v5h4a1 1 0 001-1v-8" stroke="#1E4FD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 9l3 3-3 3" stroke="#F5942B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>fix<em>i</em></span>
+      </div>
+      <h1>Encontre profissionais de confiança perto de você</h1>
+      <p>Compare avaliações reais e contrate com segurança, do jeito certo.</p>
+ 
+      <div class="location-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg>
+        <select id="citySelect">
+          <option>São Paulo, SP</option>
+          <option>Rio de Janeiro, RJ</option>
+          <option>Belo Horizonte, MG</option>
+          <option>Curitiba, PR</option>
+          <option>Porto Alegre, RS</option>
+          <option>Salvador, BA</option>
+          <option>Recife, PE</option>
+        </select>
+      </div>
+ 
+      <div class="search-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" placeholder="O que você precisa consertar?" id="searchInput">
+      </div>
+    </div>
+ 
+    <div class="cat-section">
+      <h2>Categorias populares</h2>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+ 
+    <div class="note-banner">
+      <span>💡</span>
+      <span>Protótipo de demonstração — dados de profissionais e avaliações são fictícios.</span>
+    </div>
+ 
+    <div class="start-btn" id="startBtn">Buscar profissionais</div>
+  </div>
+ 
+  <!-- ============ SCREEN: RESULTS ============ -->
+  <div class="screen" id="screen-results">
+    <div class="topbar">
+      <div class="back-btn" data-back="screen-home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="logo"><span style="font-size:1.1rem;">fix<em>i</em></span></div>
+      <div style="width:34px;"></div>
+    </div>
+ 
+    <div class="results-head">
+      <div class="results-title" id="resTitle">Eletricistas</div>
+      <div class="results-sub" id="resSub">São Paulo, SP · 4 profissionais encontrados</div>
+    </div>
+ 
+    <div class="filter-row">
+      <div class="chip active" data-sort="rating">⭐ Mais avaliados</div>
+      <div class="chip" data-sort="near">📍 Mais próximos</div>
+      <div class="chip" data-sort="price-low">↓ Menor preço</div>
+      <div class="chip" data-sort="recent">🆕 Mais recentes</div>
+      <div class="chip" data-sort="verified">✔ Verificados</div>
+    </div>
+ 
+    <div class="pro-list" id="proList"></div>
+  </div>
+ 
+  <!-- ============ SCREEN: PROFILE ============ -->
+  <div class="screen" id="screen-profile">
+    <div class="topbar">
+      <div class="back-btn" data-back="screen-results">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="logo"><span style="font-size:1.1rem;">fix<em>i</em></span></div>
+      <div style="width:34px;"></div>
+    </div>
+ 
+    <div style="flex:1; overflow-y:auto;">
+      <div class="profile-hero">
+        <div class="profile-top">
+          <div class="profile-avatar" id="pfAvatar">RS</div>
+          <div>
+            <div class="profile-name" id="pfName">Ricardo Silva</div>
+            <div class="profile-role" id="pfRole">Eletricista</div>
+            <div class="profile-rating">
+              <span class="stars">★★★★★</span>
+              <span class="rating-num" id="pfRatingNum">4.8</span>
+              <span class="rating-count" id="pfRatingCount">(120 avaliações)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+ 
+      <div class="profile-section">
+        <h3>Sobre</h3>
+        <p id="pfAbout">Profissional com 10 anos de experiência em instalações e reparos elétricos residenciais. Atendimento rápido, limpo e organizado.</p>
+      </div>
+ 
+      <div class="profile-section">
+        <h3>Área de atendimento</h3>
+        <div class="area-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z" stroke="currentColor" stroke-width="2"/></svg>
+          <span id="pfArea">São Paulo, SP — Zona Sul (Vila Mariana, Moema, Saúde)</span>
+        </div>
+      </div>
+ 
+      <div class="profile-section">
+        <h3>Serviços realizados</h3>
+        <div class="portfolio-grid">
+          <div>📷</div><div>📷</div><div>📷</div><div>📷</div><div>📷</div><div>📷</div>
+        </div>
+      </div>
+ 
+      <div class="profile-section">
+        <h3>Avaliações de clientes</h3>
+        <div class="rating-summary">
+          <div class="rating-big" id="pfBigRating">4.8</div>
+          <div class="rating-crit">
+            <div class="crit-row"><span style="width:100px;">Qualidade</span><div class="bar"><div style="width:96%;"></div></div><span class="val">4.9</span></div>
+            <div class="crit-row"><span style="width:100px;">Pontualidade</span><div class="bar"><div style="width:92%;"></div></div><span class="val">4.7</span></div>
+            <div class="crit-row"><span style="width:100px;">Organização</span><div class="bar"><div style="width:94%;"></div></div><span class="val">4.8</span></div>
+            <div class="crit-row"><span style="width:100px;">Satisfação</span><div class="bar"><div style="width:96%;"></div></div><span class="val">4.9</span></div>
+          </div>
+        </div>
+ 
+        <div id="reviewList"></div>
+      </div>
+    </div>
+ 
+    <div class="profile-cta">
+      <div class="btn-outline">📞 Ligar agora</div>
+      <div class="btn-solid">💬 Chat via WhatsApp</div>
+    </div>
+  </div>
+ 
+</div>
+` }} />
+    </>
+  );
+}
+ 
+
+
